@@ -1,16 +1,16 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useEffect, useState } from "react";
-import { faker } from "@faker-js/faker";
 
-// For demo purposes. In a real app, you'd have real user data.
-const NAME = faker.person.firstName();
 
 export default function App() {
   const messages = useQuery(api.messages.list);
   const sendMessage = useMutation(api.messages.send);
 
   const [newMessageText, setNewMessageText] = useState("");
+
+  const [userName, setUserName] = useState("Convidado");
+  const [isNameSet, setIsNameSet] = useState(false);
 
   useEffect(() => {
     // Make sure scrollTo works on button click in Chrome
@@ -19,18 +19,47 @@ export default function App() {
     }, 0);
   }, [messages]);
 
+  if (!isNameSet) {
+    return (
+      <main className="name-card">
+        <div className="card">
+          <h2>Bem-vindo ao Convex Chat!</h2>
+          <p>Qual é o seu nome?</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (userName.trim()) {
+                setIsNameSet(true); 
+              }
+            }}
+          >
+            <input
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Digite seu nome…"
+            />
+            <button type="submit" disabled={!userName.trim()}>
+              Entrar
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="chat">
       <header>
         <h1>Convex Chat</h1>
         <p>
-          Connected as <strong>{NAME}</strong>
+          Connected as <strong>{userName}</strong>
         </p>
       </header>
       {messages?.map((message) => (
         <article
           key={message._id}
-          className={message.author === NAME ? "message-mine" : ""}
+          className={message.author === userName ? "message-mine" : ""}
         >
           <div>{message.author}</div>
 
@@ -40,7 +69,7 @@ export default function App() {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          await sendMessage({ body: newMessageText, author: NAME });
+          await sendMessage({ body: newMessageText, author: userName });
           setNewMessageText("");
         }}
       >
